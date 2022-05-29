@@ -83,6 +83,13 @@ func FetchAllProduct(c echo.Context) error {
 	return c.JSON(http.StatusOK, result)
 
 }
+
+func InsertProductDetail(c echo.Context) error {
+	req := new(models.ProductDetail)
+	c.Bind(req)
+	return c.JSON(http.StatusOK, req)
+
+}
 func StoreCategory(c echo.Context) error {
 	category := c.FormValue("category")
 

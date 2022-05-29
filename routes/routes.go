@@ -16,6 +16,7 @@ func Init() *echo.Echo {
 	// Products
 	e.POST("/products", controllers.StoreProduct)
 	e.GET("/products", controllers.FetchAllProduct)
+	e.POST("/productDetails", controllers.InsertProductDetail)
 
 	return e
 }

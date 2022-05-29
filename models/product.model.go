@@ -19,9 +19,9 @@ type Product struct {
 }
 
 type ProductDetail struct {
-	Id       int `json:"id"`
-	Size     int `json:"size"`
-	Quantity int `json:"quantity"`
+	Id       int `json:"id" query:"id"`
+	Size     int `json:"size" query:"size"`
+	Quantity int `json:"quantity" query:"quantity"`
 }
 
 type ProductImage struct {
@@ -90,6 +90,7 @@ func FetchAllProduct() (Response, error) {
 	var arrProductImage []ProductImage
 
 	var idCategory string
+	var idProduct string
 
 	var res Response
 
@@ -107,7 +108,7 @@ func FetchAllProduct() (Response, error) {
 			return res, err
 		}
 		fmt.Println(product.Id)
-		idProduct := strconv.Itoa(product.Id)
+		idProduct = strconv.Itoa(product.Id)
 
 		sqlStatementCategory := "Select * from category where id = " + idCategory
 		rowsCategory, err := con.Query(sqlStatementCategory)
@@ -129,6 +130,7 @@ func FetchAllProduct() (Response, error) {
 			return res, err
 		}
 
+		arrProductImage = nil
 		for rowsProductDetail.Next() {
 			err = rowsProductDetail.Scan(&productImage.UrlImage)
 			if err != nil {
@@ -145,6 +147,36 @@ func FetchAllProduct() (Response, error) {
 	res.Message = "SUKSES GET DATA PRODUCT"
 	res.Data = arrProduct
 
+	return res, nil
+}
+
+func InsertProductDetail(pd []*ProductDetail, idProduct int) (Response, error) {
+	var res Response
+
+	con := db.CreateCon()
+
+	for _, data := range pd {
+		sqlStatementImage := "INSERT INTO `product_details` (`id`, `id_product`, `size`, `quantity`) VALUES (NULL, ?, ?, ?);"
+		stmtImage, err := con.Prepare(sqlStatementImage)
+
+		if err != nil {
+			return res, err
+		}
+
+		resultImage, err := stmtImage.Exec(idProduct, data.Size, data.Quantity)
+
+		if err != nil {
+			return res, err
+		}
+
+		fmt.Println(resultImage)
+	}
+
+	res.Status = http.StatusOK
+	res.Message = "SUKSES INPUT Products"
+	res.Data = map[string]int{
+		"LAST INSERT ID PRODUCT ": idProduct,
+	}
 	return res, nil
 }
 

@@ -113,19 +113,9 @@ func FetchAllProduct() (Response, error) {
 		fmt.Println(product.Id)
 		idProduct = strconv.Itoa(product.Id)
 
-		sqlStatementCategory := "Select * from category where id = " + idCategory
-		rowsCategory, err := con.Query(sqlStatementCategory)
-		if err != nil {
-			return res, err
-		}
+		sqlStatementCategory := "Select * from category where id = ?"
+		con.QueryRow(sqlStatementCategory, idCategory).Scan(&product.Category.Id, &product.Category.Category, &product.Category.UrlPhoto)
 
-		for rowsCategory.Next() {
-			err = rowsCategory.Scan(&product.Category.Id, &product.Category.Category, &product.Category.UrlPhoto)
-			if err != nil {
-				return res, err
-			}
-
-		}
 		sqlStatementProductImage := "Select url_image from product_image where id_product = " + idProduct
 		fmt.Println(sqlStatementProductImage)
 		rowsProductImage, err := con.Query(sqlStatementProductImage)
@@ -166,6 +156,151 @@ func FetchAllProduct() (Response, error) {
 	res.Status = http.StatusOK
 	res.Message = "SUKSES GET DATA PRODUCT"
 	res.Data = arrProduct
+
+	return res, nil
+}
+func FetchAllProductByCategory(IdCategory string) (Response, error) {
+	var product Product
+	var arrProduct []Product
+
+	var productImage ProductImage
+	var arrProductImage []ProductImage
+
+	var productDetails ProductDetail
+	var arrProductDetails []ProductDetail
+
+	var idCategory string
+	var idProduct string
+
+	var res Response
+
+	con := db.CreateCon()
+	sqlStatement := "Select * from products where id_category = " + IdCategory
+	fmt.Println(sqlStatement)
+
+	rows, err := con.Query(sqlStatement)
+	if err != nil {
+		return res, err
+	}
+
+	for rows.Next() {
+		err = rows.Scan(&product.Id, &product.Name, &idCategory, &product.Merk, &product.Harga, &product.Description)
+		if err != nil {
+			return res, err
+		}
+		fmt.Println(product.Id)
+		idProduct = strconv.Itoa(product.Id)
+
+		sqlStatementCategory := "Select * from category where id = ?"
+		con.QueryRow(sqlStatementCategory, idCategory).Scan(&product.Category.Id, &product.Category.Category, &product.Category.UrlPhoto)
+
+		sqlStatementProductImage := "Select url_image from product_image where id_product = " + idProduct
+		fmt.Println(sqlStatementProductImage)
+		rowsProductImage, err := con.Query(sqlStatementProductImage)
+		if err != nil {
+			return res, err
+		}
+
+		arrProductImage = nil
+		for rowsProductImage.Next() {
+			err = rowsProductImage.Scan(&productImage.UrlImage)
+			if err != nil {
+				return res, err
+			}
+			arrProductImage = append(arrProductImage, productImage)
+			product.ProductImage = arrProductImage
+
+		}
+		sqlStatementProductDetail := "Select id,size,quantity from product_details where id_product = " + idProduct
+		fmt.Println(sqlStatementProductDetail)
+		rowsProductDetail, err := con.Query(sqlStatementProductDetail)
+		if err != nil {
+			return res, err
+		}
+
+		arrProductDetails = nil
+		for rowsProductDetail.Next() {
+			err = rowsProductDetail.Scan(&productDetails.Id, &productDetails.Size, &productDetails.Quantity)
+			if err != nil {
+				return res, err
+			}
+			arrProductDetails = append(arrProductDetails, productDetails)
+			product.ProductDetail = arrProductDetails
+
+		}
+
+		arrProduct = append(arrProduct, product)
+	}
+	res.Status = http.StatusOK
+	res.Message = "SUKSES GET DATA PRODUCT"
+	res.Data = arrProduct
+
+	return res, nil
+}
+
+func FetchProductByID(Id string) (Response, error) {
+	var product Product
+
+	var productImage ProductImage
+	var arrProductImage []ProductImage
+
+	var productDetails ProductDetail
+	var arrProductDetails []ProductDetail
+
+	var idCategory string
+	var idProduct string
+
+	var res Response
+
+	con := db.CreateCon()
+	sqlStatement := "Select * from products where id =?"
+
+	con.QueryRow(sqlStatement, Id).Scan(&product.Id, &product.Name, &idCategory, &product.Merk, &product.Harga, &product.Description)
+
+	fmt.Println(product.Id)
+	idProduct = strconv.Itoa(product.Id)
+
+	sqlStatementCategory := "Select * from category where id = ?"
+	con.QueryRow(sqlStatementCategory, idCategory).Scan(&product.Category.Id, &product.Category.Category, &product.Category.UrlPhoto)
+
+	sqlStatementProductImage := "Select url_image from product_image where id_product = " + idProduct
+	fmt.Println(sqlStatementProductImage)
+	rowsProductImage, err := con.Query(sqlStatementProductImage)
+	if err != nil {
+		return res, err
+	}
+
+	arrProductImage = nil
+	for rowsProductImage.Next() {
+		err = rowsProductImage.Scan(&productImage.UrlImage)
+		if err != nil {
+			return res, err
+		}
+		arrProductImage = append(arrProductImage, productImage)
+		product.ProductImage = arrProductImage
+
+	}
+	sqlStatementProductDetail := "Select id,size,quantity from product_details where id_product = " + idProduct
+	fmt.Println(sqlStatementProductDetail)
+	rowsProductDetail, err := con.Query(sqlStatementProductDetail)
+	if err != nil {
+		return res, err
+	}
+
+	arrProductDetails = nil
+	for rowsProductDetail.Next() {
+		err = rowsProductDetail.Scan(&productDetails.Id, &productDetails.Size, &productDetails.Quantity)
+		if err != nil {
+			return res, err
+		}
+		arrProductDetails = append(arrProductDetails, productDetails)
+		product.ProductDetail = arrProductDetails
+
+	}
+
+	res.Status = http.StatusOK
+	res.Message = "SUKSES GET DATA PRODUCT"
+	res.Data = product
 
 	return res, nil
 }

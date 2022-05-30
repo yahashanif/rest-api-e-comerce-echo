@@ -83,6 +83,29 @@ func FetchAllProduct(c echo.Context) error {
 	return c.JSON(http.StatusOK, result)
 
 }
+func FetchAllProductByCategory(c echo.Context) error {
+	IdCategory := c.Param("id")
+	result, err := models.FetchAllProductByCategory(IdCategory)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"Message": err.Error(),
+		})
+	}
+	return c.JSON(http.StatusOK, result)
+
+}
+
+func FetchProductByID(c echo.Context) error {
+	Id := c.Param("id")
+	result, err := models.FetchProductByID(Id)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"Message": err.Error(),
+		})
+	}
+	return c.JSON(http.StatusOK, result)
+
+}
 
 func InsertProductDetail(c echo.Context) error {
 	idproduct, _ := strconv.Atoi(c.FormValue("id_product"))

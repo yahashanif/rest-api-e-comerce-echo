@@ -26,7 +26,14 @@ func Init() *echo.Echo {
 	e.GET("/products/Category/:id", controllers.FetchAllProductByCategory)
 	e.GET("/products", controllers.FetchAllProduct)
 	e.POST("/productDetails", controllers.InsertProductDetail)
-	e.GET("/ListFavorite/:id", controllers.ListProductFavorite)
+	e.GET("/favorite/:id", controllers.ListProductFavorite)
+	e.DELETE("/favorite", controllers.DeleteFavorite)
+	e.POST("/favorite", controllers.IsFavorite)
+	// Cart
+	e.POST("/addCart", controllers.AddCart)
+	e.DELETE("/deleteCart", controllers.DeleteCart)
+	e.POST("/addQuantityCart", controllers.AddQuantityCart)
+	e.POST("/minQuantityCart", controllers.MinQuantityCart)
 
 	// User
 	e.POST("/register", controllers.RegisterCustomer)

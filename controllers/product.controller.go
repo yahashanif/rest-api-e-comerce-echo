@@ -206,7 +206,95 @@ func ListProductFavorite(c echo.Context) error {
 	})
 
 	if err != nil {
-		return err
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"Message": err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, result)
+}
+
+func IsFavorite(c echo.Context) error {
+	IdUser := c.FormValue("id_user")
+	IdProduct := c.FormValue("id_product")
+	result, err := models.IsFavorite(&models.Favorite{
+		IdUser:    IdUser,
+		IdProduct: IdProduct,
+	})
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"Message": err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, result)
+}
+
+func DeleteFavorite(c echo.Context) error {
+	IdUser := c.FormValue("id_user")
+	IdProduct := c.FormValue("id_product")
+	result, err := models.DeleteFavorite(&models.Favorite{
+		IdUser:    IdUser,
+		IdProduct: IdProduct,
+	})
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"Message": err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, result)
+}
+
+func AddCart(c echo.Context) error {
+	IdUser := c.FormValue("id_user")
+	IdProductDetail := c.FormValue("id_product_detail")
+	quantity := c.FormValue("quantity")
+	result, err := models.AddCart(IdUser, IdProductDetail, quantity)
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"Message": err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, result)
+}
+func DeleteCart(c echo.Context) error {
+	IdUser := c.FormValue("id_user")
+	IdProductDetail := c.FormValue("id_product_detail")
+	result, err := models.DeleteCart(IdUser, IdProductDetail)
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"Message": err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, result)
+}
+func AddQuantityCart(c echo.Context) error {
+	IdUser := c.FormValue("id_user")
+	IdProductDetail := c.FormValue("id_product_detail")
+	result, err := models.AddQuantityCart(IdUser, IdProductDetail)
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"Message": err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, result)
+}
+func MinQuantityCart(c echo.Context) error {
+	IdUser := c.FormValue("id_user")
+	IdProductDetail := c.FormValue("id_product_detail")
+	result, err := models.MinQuantityCart(IdUser, IdProductDetail)
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"Message": err.Error(),
+		})
 	}
 
 	return c.JSON(http.StatusOK, result)

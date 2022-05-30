@@ -38,6 +38,12 @@ type Favorite struct {
 	IdProduct string `json:"id_product"`
 }
 
+type Cart struct {
+	IdUser        string        `json:"id_user"`
+	ProductDetail ProductDetail `json:"product_detail"`
+	Product       Product       `json:"product"`
+}
+
 func StoreProduct(p *Product, image []string) (Response, error) {
 	var res Response
 
@@ -476,19 +482,19 @@ func IsFavorite(f *Favorite) (Response, error) {
 
 }
 
-func DeleteFavorite(id string) (Response, error) {
+func DeleteFavorite(f *Favorite) (Response, error) {
 	var res Response
 
 	con := db.CreateCon()
 
-	sqlStatement := "DELETE from `favorite` where id=?"
+	sqlStatement := "DELETE from `favorite` where id_user= ? and id_product= ?"
 
 	stmt, err := con.Prepare(sqlStatement)
 	if err != nil {
 		return res, err
 	}
 
-	result, err := stmt.Exec(id)
+	result, err := stmt.Exec(f.IdUser, f.IdProduct)
 
 	if err != nil {
 		return res, err
@@ -509,7 +515,7 @@ func ListProductFavorite(f *Favorite) (Response, error) {
 
 	con := db.CreateCon()
 
-	sqlStatement := "Select * from favorite where id_user = " + f.IdUser
+	sqlStatement := "SELECT * FROM `favorite` where id_user = " + f.IdUser
 
 	rows, err := con.Query(sqlStatement)
 
@@ -518,22 +524,143 @@ func ListProductFavorite(f *Favorite) (Response, error) {
 	}
 
 	for rows.Next() {
-		err = rows.Scan(&f.IdUser, &f.IdProduct)
+		err = rows.Scan(&fav.IdUser, &fav.IdProduct)
 		if err != nil {
 			return res, err
 		}
 
 		arrFav = append(arrFav, fav)
 	}
-	for data := range arrFav {
-		var result interface{}
-		result, err = FetchProductByID("2")
-		if err != nil {
-			return res, err
-		}
-
+	fmt.Println(fav)
+	var arrRes []interface{}
+	for _, data := range arrFav {
+		ress, _ := FetchProductByID("2")
+		arrRes = append(arrRes, ress.Data)
+		fmt.Println(ress.Data)
 		fmt.Println(data)
-		fmt.Println(result)
 	}
+	res.Data = arrRes
+	return res, nil
+}
+
+func AddCart(IdUser, idProductDetail, quantity string) (Response, error) {
+	var res Response
+
+	con := db.CreateCon()
+	sqlStatement := "INSERT INTO `cart` (`id_user`, `id_product_details`, `quantity`) VALUES (?, ?, ?)"
+
+	stmt, err := con.Prepare(sqlStatement)
+
+	if err != nil {
+		return res, err
+	}
+
+	result, err := stmt.Exec(IdUser, idProductDetail, quantity)
+	if err != nil {
+		return res, err
+	}
+
+	lastInserId, err := result.LastInsertId()
+	if err != nil {
+		return res, err
+	}
+
+	res.Status = http.StatusOK
+	res.Message = "SUKSES ADD CART"
+	res.Data = map[string]interface{}{
+		"LastInsertID": lastInserId,
+	}
+	return res, nil
+}
+
+func DeleteCart(Iduser, IdproductDetail string) (Response, error) {
+	var res Response
+
+	con := db.CreateCon()
+
+	sqlStatement := "DELETE from `cart` where id_user= ? and id_product_details = ?"
+
+	stmt, err := con.Prepare(sqlStatement)
+	if err != nil {
+		return res, err
+	}
+
+	result, err := stmt.Exec(Iduser, IdproductDetail)
+
+	if err != nil {
+		return res, err
+	}
+
+	res.Status = http.StatusOK
+	res.Message = "SUKSES DELETE Cart"
+	res.Data = result
+
+	return res, nil
+}
+
+func AddQuantityCart(Iduser, IdproductDetail string) (Response, error) {
+	var res Response
+
+	con := db.CreateCon()
+
+	sqlStatement := "Select quantity from cart where id_user=? and id_product_details=?"
+	var quantity int
+
+	con.QueryRow(sqlStatement, Iduser, IdproductDetail).Scan(&quantity)
+	fmt.Println(quantity)
+
+	quantity++
+
+	sqlStatementUpdate := "UPDATE `cart` SET `quantity` = ? WHERE `cart`.`id_user` = ? AND `cart`.`id_product_details` = ?"
+
+	stmt, err := con.Prepare(sqlStatementUpdate)
+
+	if err != nil {
+		return res, err
+	}
+
+	result, err := stmt.Exec(quantity, Iduser, IdproductDetail)
+
+	if err != nil {
+		return res, err
+	}
+
+	res.Status = http.StatusOK
+	res.Message = "SUKSES Tambah Quantity CART"
+	res.Data = result
+
+	return res, nil
+}
+func MinQuantityCart(Iduser, IdproductDetail string) (Response, error) {
+	var res Response
+
+	con := db.CreateCon()
+
+	sqlStatement := "Select quantity from cart where id_user=? and id_product_details=?"
+	var quantity int
+
+	con.QueryRow(sqlStatement, Iduser, IdproductDetail).Scan(&quantity)
+	fmt.Println(quantity)
+
+	quantity--
+
+	sqlStatementUpdate := "UPDATE `cart` SET `quantity` = ? WHERE `cart`.`id_user` = ? AND `cart`.`id_product_details` = ?"
+
+	stmt, err := con.Prepare(sqlStatementUpdate)
+
+	if err != nil {
+		return res, err
+	}
+
+	result, err := stmt.Exec(quantity, Iduser, IdproductDetail)
+
+	if err != nil {
+		return res, err
+	}
+
+	res.Status = http.StatusOK
+	res.Message = "SUKSES Kurang Quantity CART"
+	res.Data = result
+
 	return res, nil
 }

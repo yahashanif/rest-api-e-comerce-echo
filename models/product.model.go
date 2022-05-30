@@ -33,6 +33,10 @@ type Category struct {
 	Category string `json:"category"`
 	UrlPhoto string `json:"url_photo"`
 }
+type Favorite struct {
+	IdUser    string `json:"id_user"`
+	IdProduct string `json:"id_product"`
+}
 
 func StoreProduct(p *Product, image []string) (Response, error) {
 	var res Response
@@ -438,5 +442,98 @@ func DeleteCategory(id int) (Response, error) {
 	res.Message = "SUKSES DELETE CATEGORI"
 	res.Data = result
 
+	return res, nil
+}
+
+func IsFavorite(f *Favorite) (Response, error) {
+	var res Response
+	con := db.CreateCon()
+
+	sqlStatement := "INSERT INTO `favorite` (`id_user`, `id_product`) VALUES (?, ?);"
+
+	stmt, err := con.Prepare(sqlStatement)
+
+	if err != nil {
+		return res, err
+	}
+
+	result, err := stmt.Exec(f.IdUser, f.IdProduct)
+	if err != nil {
+		return res, nil
+	}
+	LastInsertID, err := result.LastInsertId()
+	if err != nil {
+		return res, err
+	}
+
+	res.Status = http.StatusOK
+	res.Message = "SUKSES CREATE FAVORITE"
+	res.Data = map[string]interface{}{
+		"LastInsertID": LastInsertID,
+	}
+
+	return res, nil
+
+}
+
+func DeleteFavorite(id string) (Response, error) {
+	var res Response
+
+	con := db.CreateCon()
+
+	sqlStatement := "DELETE from `favorite` where id=?"
+
+	stmt, err := con.Prepare(sqlStatement)
+	if err != nil {
+		return res, err
+	}
+
+	result, err := stmt.Exec(id)
+
+	if err != nil {
+		return res, err
+	}
+
+	res.Status = http.StatusOK
+	res.Message = "SUKSES DELETE Favorite"
+	res.Data = result
+
+	return res, nil
+}
+
+func ListProductFavorite(f *Favorite) (Response, error) {
+	var res Response
+
+	var fav Favorite
+	var arrFav []Favorite
+
+	con := db.CreateCon()
+
+	sqlStatement := "Select * from favorite where id_user = " + f.IdUser
+
+	rows, err := con.Query(sqlStatement)
+
+	if err != nil {
+		return res, err
+	}
+
+	for rows.Next() {
+		err = rows.Scan(&f.IdUser, &f.IdProduct)
+		if err != nil {
+			return res, err
+		}
+
+		arrFav = append(arrFav, fav)
+	}
+	for data := range arrFav {
+		var result interface{}
+		result, err = FetchProductByID("2")
+		if err != nil {
+			return res, err
+		}
+
+		fmt.Println(data)
+		fmt.Println(result)
+	}
 	return res, nil
 }

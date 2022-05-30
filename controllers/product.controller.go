@@ -198,3 +198,16 @@ func DeleteCategory(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, result)
 }
+
+func ListProductFavorite(c echo.Context) error {
+	idUser := c.Param("id")
+	result, err := models.ListProductFavorite(&models.Favorite{
+		IdUser: idUser,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, result)
+}

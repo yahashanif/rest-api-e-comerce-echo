@@ -26,6 +26,7 @@ func Init() *echo.Echo {
 	e.GET("/products/Category/:id", controllers.FetchAllProductByCategory)
 	e.GET("/products", controllers.FetchAllProduct)
 	e.POST("/productDetails", controllers.InsertProductDetail)
+	e.GET("/ListFavorite/:id", controllers.ListProductFavorite)
 
 	// User
 	e.POST("/register", controllers.RegisterCustomer)

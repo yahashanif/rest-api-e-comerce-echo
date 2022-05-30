@@ -85,9 +85,22 @@ func FetchAllProduct(c echo.Context) error {
 }
 
 func InsertProductDetail(c echo.Context) error {
-	req := new(models.ProductDetail)
-	c.Bind(req)
-	return c.JSON(http.StatusOK, req)
+	idproduct, _ := strconv.Atoi(c.FormValue("id_product"))
+	size, _ := strconv.Atoi(c.FormValue("size"))
+	quantity, _ := strconv.Atoi(c.FormValue("quantity"))
+
+	result, err := models.InsertProductDetail(&models.ProductDetail{
+		Size:     size,
+		Quantity: quantity,
+	}, idproduct)
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"Message": err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, result)
 
 }
 func StoreCategory(c echo.Context) error {

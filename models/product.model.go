@@ -89,6 +89,9 @@ func FetchAllProduct() (Response, error) {
 	var productImage ProductImage
 	var arrProductImage []ProductImage
 
+	var productDetails ProductDetail
+	var arrProductDetails []ProductDetail
+
 	var idCategory string
 	var idProduct string
 
@@ -123,21 +126,38 @@ func FetchAllProduct() (Response, error) {
 			}
 
 		}
-		sqlStatementProductDetail := "Select url_image from product_image where id_product = " + idProduct
+		sqlStatementProductImage := "Select url_image from product_image where id_product = " + idProduct
+		fmt.Println(sqlStatementProductImage)
+		rowsProductImage, err := con.Query(sqlStatementProductImage)
+		if err != nil {
+			return res, err
+		}
+
+		arrProductImage = nil
+		for rowsProductImage.Next() {
+			err = rowsProductImage.Scan(&productImage.UrlImage)
+			if err != nil {
+				return res, err
+			}
+			arrProductImage = append(arrProductImage, productImage)
+			product.ProductImage = arrProductImage
+
+		}
+		sqlStatementProductDetail := "Select id,size,quantity from product_details where id_product = " + idProduct
 		fmt.Println(sqlStatementProductDetail)
 		rowsProductDetail, err := con.Query(sqlStatementProductDetail)
 		if err != nil {
 			return res, err
 		}
 
-		arrProductImage = nil
+		arrProductDetails = nil
 		for rowsProductDetail.Next() {
-			err = rowsProductDetail.Scan(&productImage.UrlImage)
+			err = rowsProductDetail.Scan(&productDetails.Id, &productDetails.Size, &productDetails.Quantity)
 			if err != nil {
 				return res, err
 			}
-			arrProductImage = append(arrProductImage, productImage)
-			product.ProductImage = arrProductImage
+			arrProductDetails = append(arrProductDetails, productDetails)
+			product.ProductDetail = arrProductDetails
 
 		}
 
@@ -150,27 +170,25 @@ func FetchAllProduct() (Response, error) {
 	return res, nil
 }
 
-func InsertProductDetail(pd []*ProductDetail, idProduct int) (Response, error) {
+func InsertProductDetail(pd *ProductDetail, idProduct int) (Response, error) {
 	var res Response
 
 	con := db.CreateCon()
 
-	for _, data := range pd {
-		sqlStatementImage := "INSERT INTO `product_details` (`id`, `id_product`, `size`, `quantity`) VALUES (NULL, ?, ?, ?);"
-		stmtImage, err := con.Prepare(sqlStatementImage)
+	sqlStatementImage := "INSERT INTO `product_details` (`id`, `id_product`, `size`, `quantity`) VALUES (NULL, ?, ?, ?);"
+	stmtImage, err := con.Prepare(sqlStatementImage)
 
-		if err != nil {
-			return res, err
-		}
-
-		resultImage, err := stmtImage.Exec(idProduct, data.Size, data.Quantity)
-
-		if err != nil {
-			return res, err
-		}
-
-		fmt.Println(resultImage)
+	if err != nil {
+		return res, err
 	}
+
+	resultImage, err := stmtImage.Exec(idProduct, pd.Size, pd.Quantity)
+
+	if err != nil {
+		return res, err
+	}
+
+	fmt.Println(resultImage)
 
 	res.Status = http.StatusOK
 	res.Message = "SUKSES INPUT Products"

@@ -121,14 +121,12 @@ func FetchAllProduct() (Response, error) {
 		if err != nil {
 			return res, err
 		}
-		fmt.Println(product.Id)
 		idProduct = strconv.Itoa(product.Id)
 
 		sqlStatementCategory := "Select * from category where id = ?"
 		con.QueryRow(sqlStatementCategory, idCategory).Scan(&product.Category.Id, &product.Category.Category, &product.Category.UrlPhoto)
 
 		sqlStatementProductImage := "Select url_image from product_image where id_product = " + idProduct
-		fmt.Println(sqlStatementProductImage)
 		rowsProductImage, err := con.Query(sqlStatementProductImage)
 		if err != nil {
 			return res, err
@@ -145,7 +143,6 @@ func FetchAllProduct() (Response, error) {
 
 		}
 		sqlStatementProductDetail := "Select id,size,quantity from product_details where id_product = " + idProduct
-		fmt.Println(sqlStatementProductDetail)
 		rowsProductDetail, err := con.Query(sqlStatementProductDetail)
 		if err != nil {
 			return res, err
@@ -187,7 +184,6 @@ func FetchAllProductByCategory(IdCategory string) (Response, error) {
 
 	con := db.CreateCon()
 	sqlStatement := "Select * from products where id_category = " + IdCategory
-	fmt.Println(sqlStatement)
 
 	rows, err := con.Query(sqlStatement)
 	if err != nil {
@@ -199,14 +195,12 @@ func FetchAllProductByCategory(IdCategory string) (Response, error) {
 		if err != nil {
 			return res, err
 		}
-		fmt.Println(product.Id)
 		idProduct = strconv.Itoa(product.Id)
 
 		sqlStatementCategory := "Select * from category where id = ?"
 		con.QueryRow(sqlStatementCategory, idCategory).Scan(&product.Category.Id, &product.Category.Category, &product.Category.UrlPhoto)
 
 		sqlStatementProductImage := "Select url_image from product_image where id_product = " + idProduct
-		fmt.Println(sqlStatementProductImage)
 		rowsProductImage, err := con.Query(sqlStatementProductImage)
 		if err != nil {
 			return res, err
@@ -223,7 +217,6 @@ func FetchAllProductByCategory(IdCategory string) (Response, error) {
 
 		}
 		sqlStatementProductDetail := "Select id,size,quantity from product_details where id_product = " + idProduct
-		fmt.Println(sqlStatementProductDetail)
 		rowsProductDetail, err := con.Query(sqlStatementProductDetail)
 		if err != nil {
 			return res, err
@@ -268,14 +261,12 @@ func FetchProductByID(Id string) (Response, error) {
 
 	con.QueryRow(sqlStatement, Id).Scan(&product.Id, &product.Name, &idCategory, &product.Merk, &product.Harga, &product.Description)
 
-	fmt.Println(product.Id)
 	idProduct = strconv.Itoa(product.Id)
 
 	sqlStatementCategory := "Select * from category where id = ?"
 	con.QueryRow(sqlStatementCategory, idCategory).Scan(&product.Category.Id, &product.Category.Category, &product.Category.UrlPhoto)
 
 	sqlStatementProductImage := "Select url_image from product_image where id_product = " + idProduct
-	fmt.Println(sqlStatementProductImage)
 	rowsProductImage, err := con.Query(sqlStatementProductImage)
 	if err != nil {
 		return res, err
@@ -292,7 +283,6 @@ func FetchProductByID(Id string) (Response, error) {
 
 	}
 	sqlStatementProductDetail := "Select id,size,quantity from product_details where id_product = " + idProduct
-	fmt.Println(sqlStatementProductDetail)
 	rowsProductDetail, err := con.Query(sqlStatementProductDetail)
 	if err != nil {
 		return res, err
@@ -532,12 +522,10 @@ func ListProductFavorite(f *Favorite) (Response, error) {
 
 		arrFav = append(arrFav, fav)
 	}
-	fmt.Println(fav)
 	var arrRes []interface{}
 	for _, data := range arrFav {
 		ress, _ := FetchProductByID("2")
 		arrRes = append(arrRes, ress.Data)
-		fmt.Println(ress.Data)
 		fmt.Println(data)
 	}
 	res.Data = arrRes
@@ -552,17 +540,14 @@ func AddCart(IdUser, idProductDetail, quantity string) (Response, error) {
 	var idcek string
 
 	con.QueryRow(sqlStatementCek, idProductDetail).Scan(&idcek)
-	fmt.Println(len(idcek))
 	if len(idcek) != 0 {
 		result, err := AddQuantityCart(IdUser, idProductDetail)
 		if err != nil {
 			return res, err
 		}
-		fmt.Println("tambah quantity")
 
 		res.Data = result
 	} else {
-		fmt.Println("add Cart")
 
 		sqlStatement := "INSERT INTO `cart` (`id_user`, `id_product_details`, `quantity`) VALUES (?, ?, ?)"
 
@@ -626,7 +611,6 @@ func AddQuantityCart(Iduser, IdproductDetail string) (Response, error) {
 	var quantity int
 
 	con.QueryRow(sqlStatement, Iduser, IdproductDetail).Scan(&quantity)
-	fmt.Println(quantity)
 
 	quantity++
 
@@ -659,7 +643,6 @@ func MinQuantityCart(Iduser, IdproductDetail string) (Response, error) {
 	var quantity int
 
 	con.QueryRow(sqlStatement, Iduser, IdproductDetail).Scan(&quantity)
-	fmt.Println(quantity)
 	if quantity == 1 {
 		DeleteCart(Iduser, IdproductDetail)
 		res.Status = http.StatusOK

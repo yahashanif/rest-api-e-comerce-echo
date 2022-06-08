@@ -42,6 +42,7 @@ type Cart struct {
 	IdUser        string        `json:"id_user"`
 	ProductDetail ProductDetail `json:"product_detail"`
 	Product       Product       `json:"product"`
+	Quantity      int           `json:"quantity"`
 }
 
 func StoreProduct(p *Product, image []string) (Response, error) {
@@ -547,30 +548,48 @@ func AddCart(IdUser, idProductDetail, quantity string) (Response, error) {
 	var res Response
 
 	con := db.CreateCon()
-	sqlStatement := "INSERT INTO `cart` (`id_user`, `id_product_details`, `quantity`) VALUES (?, ?, ?)"
+	sqlStatementCek := "Select id_product_details from cart where id_product_details = ?"
+	var idcek string
 
-	stmt, err := con.Prepare(sqlStatement)
+	con.QueryRow(sqlStatementCek, idProductDetail).Scan(&idcek)
+	fmt.Println(len(idcek))
+	if len(idcek) != 0 {
+		result, err := AddQuantityCart(IdUser, idProductDetail)
+		if err != nil {
+			return res, err
+		}
+		fmt.Println("tambah quantity")
 
-	if err != nil {
-		return res, err
-	}
+		res.Data = result
+	} else {
+		fmt.Println("add Cart")
 
-	result, err := stmt.Exec(IdUser, idProductDetail, quantity)
-	if err != nil {
-		return res, err
-	}
+		sqlStatement := "INSERT INTO `cart` (`id_user`, `id_product_details`, `quantity`) VALUES (?, ?, ?)"
 
-	lastInserId, err := result.LastInsertId()
-	if err != nil {
-		return res, err
-	}
+		stmt, err := con.Prepare(sqlStatement)
 
-	res.Status = http.StatusOK
-	res.Message = "SUKSES ADD CART"
-	res.Data = map[string]interface{}{
-		"LastInsertID": lastInserId,
+		if err != nil {
+			return res, err
+		}
+
+		result, err := stmt.Exec(IdUser, idProductDetail, quantity)
+		if err != nil {
+			return res, err
+		}
+
+		lastInserId, err := result.LastInsertId()
+		if err != nil {
+			return res, err
+		}
+
+		res.Status = http.StatusOK
+		res.Message = "SUKSES ADD CART"
+		res.Data = map[string]interface{}{
+			"LastInsertID": lastInserId,
+		}
 	}
 	return res, nil
+
 }
 
 func DeleteCart(Iduser, IdproductDetail string) (Response, error) {
@@ -641,26 +660,84 @@ func MinQuantityCart(Iduser, IdproductDetail string) (Response, error) {
 
 	con.QueryRow(sqlStatement, Iduser, IdproductDetail).Scan(&quantity)
 	fmt.Println(quantity)
+	if quantity == 1 {
+		DeleteCart(Iduser, IdproductDetail)
+		res.Status = http.StatusOK
+		res.Message = "SUKSES DELETE Cart"
+	} else {
+		quantity--
 
-	quantity--
+		sqlStatementUpdate := "UPDATE `cart` SET `quantity` = ? WHERE `cart`.`id_user` = ? AND `cart`.`id_product_details` = ?"
 
-	sqlStatementUpdate := "UPDATE `cart` SET `quantity` = ? WHERE `cart`.`id_user` = ? AND `cart`.`id_product_details` = ?"
+		stmt, err := con.Prepare(sqlStatementUpdate)
 
-	stmt, err := con.Prepare(sqlStatementUpdate)
+		if err != nil {
+			return res, err
+		}
 
+		result, err := stmt.Exec(quantity, Iduser, IdproductDetail)
+
+		if err != nil {
+			return res, err
+		}
+
+		res.Status = http.StatusOK
+		res.Message = "SUKSES Kurang Quantity CART"
+		res.Data = result
+	}
+
+	return res, nil
+}
+
+func ListCart(IdUser string) (Response, error) {
+	var res Response
+
+	var cart Cart
+	var arrCart []Cart
+
+	var productImage ProductImage
+	var arrProductImage []ProductImage
+
+	con := db.CreateCon()
+
+	sqlStatement := "SELECT	cart.id_user,cart.quantity,product_details.id,product_details.size,products.id,products.name,products.merk,products.harga,products.description,category.category FROM `cart`INNER JOIN product_details ON cart.id_product_details=product_details.id INNER JOIN products ON product_details.id_product= products.id INNER JOIN category ON products.id_category=category.id where id_user = " + IdUser
+
+	rows, err := con.Query(sqlStatement)
 	if err != nil {
 		return res, err
 	}
+	for rows.Next() {
+		err := rows.Scan(&cart.IdUser, &cart.Quantity, &cart.ProductDetail.Id, &cart.ProductDetail.Size, &cart.Product.Id, &cart.Product.Name, &cart.Product.Merk, &cart.Product.Harga, &cart.Product.Description, &cart.Product.Category.Category)
 
-	result, err := stmt.Exec(quantity, Iduser, IdproductDetail)
+		if err != nil {
+			return res, err
+		}
+		idpString := strconv.Itoa(cart.Product.Id)
 
-	if err != nil {
-		return res, err
+		sqlStatementProductImage := "SELECT url_image FROM `product_image` where id_product = " + idpString
+
+		rowsProductImage, err := con.Query(sqlStatementProductImage)
+		if err != nil {
+			return res, err
+		}
+		arrProductImage = nil
+		for rowsProductImage.Next() {
+			err := rowsProductImage.Scan(&productImage.UrlImage)
+			if err != nil {
+				return res, err
+			}
+
+			arrProductImage = append(arrProductImage, productImage)
+
+		}
+		cart.Product.ProductImage = arrProductImage
+
+		arrCart = append(arrCart, cart)
 	}
 
 	res.Status = http.StatusOK
-	res.Message = "SUKSES Kurang Quantity CART"
-	res.Data = result
+	res.Message = "SUKSES GET LIST CART"
+	res.Data = arrCart
 
 	return res, nil
 }

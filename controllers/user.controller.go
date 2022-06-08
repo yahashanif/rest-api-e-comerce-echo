@@ -58,3 +58,15 @@ func CheckLoginCustomer(c echo.Context) error {
 		"token": t,
 	})
 }
+
+func CheckUser(c echo.Context) error {
+	id := c.Param("id")
+	result, err := models.CheckUser(id)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"messageww": err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, result)
+}

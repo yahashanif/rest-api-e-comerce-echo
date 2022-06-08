@@ -299,3 +299,16 @@ func MinQuantityCart(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, result)
 }
+
+func ListCart(c echo.Context) error {
+	IdUser := c.Param("id_user")
+
+	result, err := models.ListCart(IdUser)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"Message": err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, result)
+}

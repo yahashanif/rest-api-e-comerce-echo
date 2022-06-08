@@ -81,3 +81,23 @@ func CheckLoginCustomer(username, password string) (Response, error) {
 	return res, nil
 
 }
+
+func CheckUser(id string) (Response, error) {
+	var res Response
+	var user User
+	var pwd string
+
+	con := db.CreateCon()
+	sqlStatement := "SELECT * FROM users WHERE id = ? and level = 'customer'"
+
+	err := con.QueryRow(sqlStatement, id).Scan(&user.Id, &user.Username, &user.Level, &user.FullName, &user.Email, &user.UrlPhoto, &pwd)
+	if err != nil {
+		return res, err
+	}
+
+	res.Status = http.StatusOK
+	res.Message = "SUKSES CEK USER"
+	res.Data = user
+
+	return res, nil
+}
